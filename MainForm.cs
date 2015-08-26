@@ -86,6 +86,8 @@ namespace MSBash
 			new Spell( 	4, 	"Focus Shot",  	5000, 	1000, 	0, 		0, 		-50, 	4, 		4),
 			new Spell( 	5, 	"Arcane Shot", 	0, 		3000, 	0, 		1000, 	30, 	5, 		3),
 			new Spell( 	6, 	"Multi Shot", 	0, 		3000, 	0, 		1000, 	30, 	6, 		1),
+			new Spell( 	7, 	"Multi Shot", 	0, 		3000, 	0, 		1000, 	30, 	9, 		1),
+			new Spell( 	8, 	"Multi Shot", 	0, 		3000, 	0, 		1000, 	30, 	6, 		1),
 		};
 		
 		SpellStatus[] spellstatuses = {
@@ -103,18 +105,48 @@ namespace MSBash
 		
 		
 		List<String> logBuffer = new List<String>();
+		List<Point> pixpos = new List<Point>();
 		
 		public MainForm()
 		{
-			//myTimer.Tick += new EventHandler(myEvent);
-    		//myTimer.Interval = 50;
-    		//myTimer.Enabled = true;
-    		//myTimer.Start();
-
-			//
-			// The InitializeComponent() call is required for Windows Forms designer support.
-			//
 			InitializeComponent();
+
+			int i,j,ox=1586,oy=778;
+			
+			//Log( "Generating data" );
+
+			List<List<Point>> trackers = new List<List<Point>>();
+			
+			//GCD
+			for (j=0; j<10; j++)
+			{
+				List<Point> trk = new List<Point>();
+				for (i=0; i<10; i++)
+				{
+					trk.Add( new Point( ox+5+(i*10), oy+5+(j*16) ));
+				}
+				trackers.Add( trk );
+			}
+			
+			List<Point> spots = new List<Point>();
+			for (i=0; i<8; i++)
+			{
+				spots.Add( new Point( ox+120, oy+5+(j*16) ));
+			}
+			//infatuation empaty commitment
+
+			
+			for (j=0; j<10; j++)
+				for (i=0; i<10; i++)
+					pixpos.Add( trackers[j][i] );
+			
+			for (j=0; j<8; j++)
+					pixpos.Add( spots[j] );
+
+			List<uint> pxs = WindowHelper.GetSCListPixelColors( pixpos );
+		
+			
+
 		
 			InitializePlayerStatus();
 			
@@ -122,51 +154,16 @@ namespace MSBash
 			
 			basetime = (Int64) ((3600000*ts.Hours)+(60000*ts.Minutes)+(1000*ts.Seconds)+ts.Milliseconds);
 			
-			int limit = 16;
+			int limit = 4000;
 			Random rnd = new Random();
 			
-			List<int> xs = new List<int>();
-			List<int> ys = new List<int>();
-			
-			Log( "Generating data" );
-			
-			for(int i = 0; i<limit; i++)
-			{
-				xs.Add(rnd.Next(250,500));
-				ys.Add(rnd.Next(250,500));       
-			}
-				
-			Log( "Measuring..." );
-			
-			Stopwatch sw = new Stopwatch();						
-			List<uint> pxs;
-
-			//Version 1
-			
-			pxs = new List<uint>();
-			sw.Reset();
-			sw.Start();
-			for (int i=0; i<limit; i++)
-				pxs.Add(WindowHelper.GetPixelColor( xs[i], ys[i] ));
-			sw.Stop();
-			Log( String.Format("Time Version 1: {0}", sw.Elapsed ));
-			
-			
-			//Version 2 [500 ~8s 1000 ~16s] 
-			/*
- 			sw.Reset();
-			sw.Start();
-				pxs = WindowHelper.GetListPixelColors( xs, ys );
-			sw.Stop();
-			Log( String.Format("Time Version 2: {0}", sw.Elapsed ));
-			*/
 			
 			//Version 3 [500 ~0.05s 1000 ~0.05s 4000 ~0.05s] :)
-			sw.Reset();
-			sw.Start();
-				pxs = WindowHelper.GetSCListPixelColors( xs, ys );
-			sw.Stop();
-			Log( String.Format("Time Version 3: {0}", sw.Elapsed ));
+			//sw.Reset();
+			//sw.Start();
+			//	pxs = WindowHelper.GetSCListPixelColors( xs, ys );
+			//sw.Stop();
+			//Log( String.Format("Time Version 3: {0}", sw.Elapsed ));
 
 			
 			
@@ -202,14 +199,14 @@ namespace MSBash
 		{
 			Debug.WriteLine(msg);
 			
-			
+			/*
 			int visible = (lstLog.ClientSize.Height / lstLog.ItemHeight)-2;
 			if (lstLog.Items.Count>visible) 
 			{
 				lstLog.Items.RemoveAt(0);
 			}
 			lstLog.Items.Add( msg );
-			
+			*/
 			//loglbl.Text += String.Format("{0}\n",msg) ;
 		}
 		
@@ -241,6 +238,31 @@ namespace MSBash
 			
 		void UpdatePlayerStatus()
 		{
+			int i;
+			List<uint> pixcol = WindowHelper.GetSCListPixelColors(pixpos);
+			
+			//Health:
+			int health=0;
+			for (i=80; i<89; i++)
+			{
+				if (pixcol[i]==0x0000FF00)
+					health += (328980/10);
+			}
+			
+			//Focus:
+			int focus=0;
+			for (i=90; i<99; i++)
+			{
+				if (pixcol[i]==0x0000FF00)
+					focus += (120/10);
+			}
+			
+			//Spell Statuses
+			for (i=100; i<108; i++)
+			{
+				spellstatuses[i-100].ready = (pixcol[i]==0x0000FF00);
+			}
+			
 			short v = (short) (((currenttime-lastPlayerStatus.timestamp)*2)/100);
 			lastPlayerStatus.value += v;
 			if (lastPlayerStatus.value>120) 
@@ -251,6 +273,8 @@ namespace MSBash
 		void Tick()
 		{
 			// Get statuses
+			
+		
 
 			// Global Status
 			// UpdateGlobalStatus() - here we just assume its done in the cast phase!
@@ -382,6 +406,7 @@ namespace MSBash
 		[DllImport("USER32.DLL")]
 		public static extern bool SetForegroundWindow(IntPtr hWnd);
 
+		// Dont use!
 		static public uint GetPixelColor(int x, int y)
 	    {
 	        IntPtr hdc = GetDC(IntPtr.Zero);
@@ -390,6 +415,7 @@ namespace MSBash
 	        return pixel;
 	    }	
 		
+		// Dont use!
 		static public List<uint> GetListPixelColors(List<int> xs, List<int> ys)
 		{
 	        IntPtr hdc = GetDC(IntPtr.Zero);
@@ -399,6 +425,7 @@ namespace MSBash
 	        return pix;
 		}
 		
+		// 
 		static public List<uint> GetSCListPixelColors(List<int> xs, List<int> ys)
 		{
 			ScreenCapture sc = new ScreenCapture();
@@ -409,12 +436,27 @@ namespace MSBash
 	        for (int i=0; i<xs.Count; i++)
 	        {
 	        	System.Drawing.Color cl = bmp.GetPixel(xs[i],ys[i]);
-	        	pix.Add((uint)cl.ToArgb());
+	        	pix.Add((uint)(cl.ToArgb()&0x00FFFFFF));
 	        }
 	        return pix;
-			
 		}
 	        
+		static public List<uint> GetSCListPixelColors(List<Point> ps)
+		{
+			ScreenCapture sc = new ScreenCapture();
+			// capture the screen and stores it in a image
+			Image img = sc.CaptureScreen();
+			Bitmap bmp = new Bitmap(img);
+	        List<uint> pix = new List<uint>();
+	        for (int i=0; i<ps.Count; i++)
+	        {
+	        	System.Drawing.Color cl = bmp.GetPixel(ps[i].X, ps[i].Y);
+	        	pix.Add((uint)(cl.ToArgb()&0x00FFFFFF));
+	        }
+	        return pix;
+		}
+
+
 		static public bool ActivateWoW()
 		{
 			IntPtr wHandle = FindWindow(null,"World of Warcraft");
