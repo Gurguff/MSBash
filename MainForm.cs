@@ -20,55 +20,55 @@ namespace MSBash
 	/// <summary>
 	/// Description of MainForm.
 	/// </summary>
-	public class Spell 
+	/// 
+	public class Spell
 	{
-		//static part:
-		public Int64 id;
-		public String name;
- 		public Int64 casttime;	//time from start to cast until actually happening - this is when it can be interrupted!
- 		public Int64 cooldown;	//time from cast until ready again
- 		public Int64 duration;  //time for the spell to be active
- 		public Int64 globalcd;  //time until a different action can be used
- 		public Int64 value;		//focus, rage...
- 		public Int64 tokens;	//the "other cost" (rogue points, palladin charges)
- 		public Int64 prios;
- 		public Int64 priom;
- 		public bool  bigcd;
- 		public bool  smallcd;
- 		public bool	 defcd;
-		 		
- 		public Spell(Int64 i, String n, Int64 ct, Int64 cd, Int64 dr, Int64 gcd, Int64 cst, Int64 sp, Int64 mt )
- 		{
- 			id = i; name = n; casttime = ct; cooldown = cd;
- 		    duration = dr; globalcd = gcd; value = cst; 
- 		    prios = sp; priom = mt;
- 		}
-	}
-
-	public class SpellStatus
-	{
-		public Int64 id;
-		public Int64 castedat;
-		public Int64 availableat;
-		public bool	 ready;
+		string key;
+		string name;
+		int    pos;
+		int[4] vals;
 		
-		public SpellStatus(Int64 i, Int64 c, Int64 a, bool r)
+		public Spell(string line)			
 		{
-			id = i; castedat=c; availableat=a; ready=r;
+			line = line.Replace("\t",""); //remove tabs
+			line = line.Replace(" ","");  //remove spaces
+			IList<string> tokens = line.Split(',').ToList();
+			
+			key = tokens[0];
+			name = tokens[1];
+			pos = System.Int32.Parse(tokens[2]);
+			vals[0] = System.Int32.Parse(tokens[3]);
+			vals[1] = System.Int32.Parse(tokens[4]);
+			vals[2] = System.Int32.Parse(tokens[5]);
+			vals[3] = System.Int32.Parse(tokens[6]);
 		}
 	}
 	
 	
-	public class PlayerStatus
+	public class Spells
 	{
-		public Int64 value;
-		public Int64 tokens;
-		public Int32 health;
-		public Boolean hasTarget;
-		public Boolean inCombat;
-		public Int64 gcdoff_at;
-		public Int64 castdone_at;
-		public Int64 timestamp;
+		string toon;
+		IList<Spell> spells;
+		
+		public Load(string filename)
+		{
+			string[] lines = System.IO.File.ReadAllLines(@"C:\Users\Public\TestFolder\WriteLines2.txt");
+			if ( !((lines[0].Equals("Rotator") && lines[1].Equals("v0.2") ) )
+			{    
+			    toon = lines[2];
+			    for (int i=3; i< lines.Length();i++)
+			    {
+			    	spells.Add(new Spell(lines[i]));
+			    }
+			}
+		}
+		
+		public static int[,] spots = { { 828,840,683,695 }, { 894,906,683,695 } };
+		
+		
+		public Spells()
+		{
+		}
 		
 	}
 
@@ -77,36 +77,37 @@ namespace MSBash
 		
 		Timer myTimer = new Timer();
 		
-		PlayerStatus lastPlayerStatus = new PlayerStatus();
-		Spell[] spells = { 
-			//			ID	Name			Cast	CD		Dura	GCD		Value	STP		MTP
-			new Spell( 	1, 	"Kill Command", 0, 		6000, 	0, 		1000, 	40, 	1, 		5),
-			new Spell( 	2, 	"Kill Shot", 	0, 		10000, 	0, 		0, 		0,	 	2, 		6),
-			new Spell( 	3, 	"Barrage", 		0, 		3000, 	3000,	1000, 	60, 	3, 		2),
-			new Spell( 	4, 	"Focus Shot",  	5000, 	1000, 	0, 		0, 		-50, 	4, 		4),
-			new Spell( 	5, 	"Arcane Shot", 	0, 		3000, 	0, 		1000, 	30, 	5, 		3),
-			new Spell( 	6, 	"Multi Shot", 	0, 		3000, 	0, 		1000, 	30, 	6, 		1),
-			new Spell( 	7, 	"Multi Shot", 	0, 		3000, 	0, 		1000, 	30, 	9, 		1),
-			new Spell( 	8, 	"Multi Shot", 	0, 		3000, 	0, 		1000, 	30, 	6, 		1),
-		};
-		
-		SpellStatus[] spellstatuses = {
-			new SpellStatus(1, -1, 0, false),
-			new SpellStatus(2, -1, 0, false),
-			new SpellStatus(3, -1, 0, false),
-			new SpellStatus(4, -1, 0, false),
-			new SpellStatus(5, -1, 0, false),
-			new SpellStatus(6, -1, 0, false)
-		};
-		
-		List<Int64> prio_order, pick_order;
-
-		Int64 basetime = 0, currenttime = 0;
-		
 		
 		List<String> logBuffer = new List<String>();
 		List<Point> pixpos = new List<Point>();
+		/*
+		int ax = 974; 		// left edge of the button
+		int ay = 798; 		// top edge of the buttons
+        int bd = 40;  		// distance between buttons
+		int sd = 12; 		// distance between samples
+		int os = 6; 		// offset from button corner for first sample point
+ 		int x1 = ax+os, x2 = x1+sd;
+ 		int y1 = lobal $1y = $ay+$os, $2y = $1y+$sd
+
+global $spot1x[] = [ $1x,$2x,$1x,$2x ]
+global $spot1y[] = [ $1y,$1y,$2y,$2y ]
+$1x += $bd
+$2x += $bd
+global $spot2x[] = [ $1x,$2x,$1x,$2x ]
+global $spot2y[] = [ $1y,$1y,$2y,$2y ]
+$1x += $bd
+$2x += $bd
+global $spot3x[] = [ $1x,$2x,$1x,$2x ]
+global $spot3y[] = [ $1y,$1y,$2y,$2y ]
+$1x += $bd
+$2x += $bd
+global $spot4x[] = [ $1x,$2x,$1x,$2x ]
+global $spot4y[] = [ $1y,$1y,$2y,$2y ] 
+		*/
 		
+		
+		pixpos.Add( new Point(x , y ));
+
 		public MainForm()
 		{
 			InitializeComponent();
@@ -245,7 +246,7 @@ namespace MSBash
 			int health=0;
 			for (i=80; i<89; i++)
 			{
-				if (pixcol[i]==0x0000FF00)
+				if (pixcol[i]!=0x000C0C0C)
 					health += (328980/10);
 			}
 			
@@ -260,27 +261,27 @@ namespace MSBash
 			//Spell Statuses
 			for (i=100; i<108; i++)
 			{
-				spellstatuses[i-100].ready = (pixcol[i]==0x0000FF00);
+				spellstatuses[i-100].ready = (pixcol[i]==0x0000FF01);
 			}
 			
-			short v = (short) (((currenttime-lastPlayerStatus.timestamp)*2)/100);
-			lastPlayerStatus.value += v;
-			if (lastPlayerStatus.value>120) 
-				lastPlayerStatus.value = 120;
+			//short v = (short) (((currenttime-lastPlayerStatus.timestamp)*2)/100);
+			//lastPlayerStatus.value += v;
+			//if (lastPlayerStatus.value>120) 
+			//	lastPlayerStatus.value = 120;
 			//Log("Adding {0} focus => {1}", v, lastPlayerStatus.value);
 		}
 		
+		void UpdateStatus()
+		{
+			UpdatePlayerStatus();
+		}
+
+
 		void Tick()
 		{
 			// Get statuses
 			
-		
-
-			// Global Status
-			// UpdateGlobalStatus() - here we just assume its done in the cast phase!
-
-			// PlayerStatus
-			UpdatePlayerStatus();
+			UpdateStatus();
 			
 			// TODO: gcd check here !
 			
