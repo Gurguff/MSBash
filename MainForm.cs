@@ -427,11 +427,24 @@ global $spot4y[] = [ $1y,$1y,$2y,$2y ]
 		}
 		
 		// 
-		static public List<uint> GetSCListPixelColors(List<int> xs, List<int> ys)
+		static public Rectangle BoundingBox(IEnumerable<Point> points)
+		{
+    		var x_query = from Point p in points select p.X;
+    		int xmin = x_query.Min();
+    		int xmax = x_query.Max();
+
+    		var y_query = from Point p in points select p.Y;
+    		int ymin = y_query.Min();
+    		int ymax = y_query.Max();
+
+    		return new Rectangle(xmin, ymin, xmax - xmin, ymax - ymin);
+		}
+		
+		static public List<uint> GetSCListPixelColors(List<Point> ps, Rectangle boundingbox)
 		{
 			ScreenCapture sc = new ScreenCapture();
 			// capture the screen and stores it in a image
-			Image img = sc.CaptureScreen();
+			Image img = sc.CaptureScreenRectangle(boundingbox);
 			Bitmap bmp = new Bitmap(img);
 	        List<uint> pix = new List<uint>();
 	        for (int i=0; i<xs.Count; i++)
@@ -516,6 +529,50 @@ global $spot4y[] = [ $1y,$1y,$2y,$2y ]
             return img;
         }
         /// <summary>
+        /// Creates an Image object containing part of a screen shot of the entire desktop specified by a rectangle
+        /// </summary>
+        /// <returns></returns>
+        public Image CaptureScreenRectangle(Rectangle rectangle)
+        {
+            return CaptureWindowRectangle( User32.GetDesktopWindow(), rectangle );
+        }
+        /// <summary>
+        /// Creates an Image object containing a screen shot of a specific part (rectangle) of awindow 
+        /// </summary>
+        /// <param name="handle">The handle to the window. 
+        /// (In windows forms, this is obtained by the Handle property)</param>
+        /// <param name="rectangle">The rectangle specifying the part</param>
+        /// <returns></returns>
+        public Image CaptureWindowRectangle(IntPtr handle, Rectangle rectangle)
+        {
+            // get te hDC of the target window
+            IntPtr hdcSrc = User32.GetWindowDC(handle);
+            // get the size
+            int width = rectangle.Width;
+            int height = rectangle.Height;
+            // create a device context we can copy to
+            IntPtr hdcDest = GDI32.CreateCompatibleDC(hdcSrc);
+            // create a bitmap we can copy it to,
+            // using GetDeviceCaps to get the width/height
+            IntPtr hBitmap = GDI32.CreateCompatibleBitmap(hdcSrc,rectangle.width,rectangle.height);
+            // select the bitmap object
+            IntPtr hOld = GDI32.SelectObject(hdcDest,hBitmap);
+            // bitblt over
+            GDI32.BitBlt(hdcDest,0,0,rectangle.width,rectangle.height,hdcSrc,rectangle.left,rectangle.top,GDI32.SRCCOPY);
+            // restore selection
+            GDI32.SelectObject(hdcDest,hOld);
+            // clean up
+            GDI32.DeleteDC(hdcDest);
+            User32.ReleaseDC(handle,hdcSrc);
+            // get a .NET image object for it
+            Image img = Image.FromHbitmap(hBitmap);
+            // free up the Bitmap object
+            GDI32.DeleteObject(hBitmap);
+            return img;
+        }
+        	
+        
+        /// <summary>
         /// Captures a screen shot of a specific window, and saves it to a file
         /// </summary>
         /// <param name="handle"></param>
@@ -534,6 +591,29 @@ global $spot4y[] = [ $1y,$1y,$2y,$2y ]
         public void CaptureScreenToFile(string filename, ImageFormat format)
         {
             Image img = CaptureScreen();
+            img.Save(filename,format);
+        }
+        /// <summary>
+        /// Captures a part of a screen shot of a specific window, and saves it to a file
+        /// </summary>
+        /// <param name="handle"></param>
+        /// <param name="rectangle"></param>
+        /// <param name="filename"></param>
+        /// <param name="format"></param>
+        public void CaptureWindowToFile(IntPtr handle, Rectangle rectangle, string filename, ImageFormat format)
+        {
+            Image img = CaptureWindowRectangle(handle,rectangle);
+            img.Save(filename,format);
+        }
+        /// <summary>
+        /// Captures a part of a screen shot of the entire desktop, and saves it to a file
+        /// </summary>
+        /// <param name="rectangle"></param>
+        /// <param name="filename"></param>
+        /// <param name="format"></param>
+        public void CaptureScreenToFile(Rectangle rectangle, string filename, ImageFormat format)
+        {
+            Image img = CaptureScreenRectangle(rectangle);
             img.Save(filename,format);
         }
 
