@@ -13,7 +13,8 @@ namespace MSBash
 	/// <summary>
 	/// Description of NSpells.
 	/// </summary>
-	public virtual class NSpell 
+	/*	
+	public virtual class NSpell
 	{
 		//static part:
 		public long id;
@@ -73,4 +74,5 @@ namespace MSBash
 			return -1;
 		}
 	}
+	*/
 }

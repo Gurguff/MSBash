@@ -7,6 +7,7 @@
  * To change this template use Tools | Options | Coding | Edit Standard Headers.
  */
 using System;
+using System.Linq;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Imaging;
@@ -26,13 +27,13 @@ namespace MSBash
 		string key;
 		string name;
 		int    pos;
-		int[4] vals;
+		int[]  vals = new int[4];
 		
 		public Spell(string line)			
 		{
 			line = line.Replace("\t",""); //remove tabs
 			line = line.Replace(" ","");  //remove spaces
-			IList<string> tokens = line.Split(',').ToList();
+			List<string> tokens = new List<string>(line.Split(','));
 			
 			key = tokens[0];
 			name = tokens[1];
@@ -50,17 +51,18 @@ namespace MSBash
 		string toon;
 		IList<Spell> spells;
 		
-		public Load(string filename)
+		public bool Load(string filename)
 		{
 			string[] lines = System.IO.File.ReadAllLines(@"C:\Users\Public\TestFolder\WriteLines2.txt");
-			if ( !((lines[0].Equals("Rotator") && lines[1].Equals("v0.2") ) )
+			if ( !((lines[0].Equals("Rotator") && lines[1].Equals("v0.2") ) ) )
 			{    
 			    toon = lines[2];
-			    for (int i=3; i< lines.Length();i++)
+			    for (int i=3; i< lines.Length;i++)
 			    {
 			    	spells.Add(new Spell(lines[i]));
 			    }
 			}
+			return true;
 		}
 		
 		public static int[,] spots = { { 828,840,683,695 }, { 894,906,683,695 } };
@@ -80,83 +82,49 @@ namespace MSBash
 		
 		List<String> logBuffer = new List<String>();
 		List<Point> pixpos = new List<Point>();
-		/*
+
 		int ax = 974; 		// left edge of the button
 		int ay = 798; 		// top edge of the buttons
         int bd = 40;  		// distance between buttons
 		int sd = 12; 		// distance between samples
 		int os = 6; 		// offset from button corner for first sample point
- 		int x1 = ax+os, x2 = x1+sd;
- 		int y1 = lobal $1y = $ay+$os, $2y = $1y+$sd
-
-global $spot1x[] = [ $1x,$2x,$1x,$2x ]
-global $spot1y[] = [ $1y,$1y,$2y,$2y ]
-$1x += $bd
-$2x += $bd
-global $spot2x[] = [ $1x,$2x,$1x,$2x ]
-global $spot2y[] = [ $1y,$1y,$2y,$2y ]
-$1x += $bd
-$2x += $bd
-global $spot3x[] = [ $1x,$2x,$1x,$2x ]
-global $spot3y[] = [ $1y,$1y,$2y,$2y ]
-$1x += $bd
-$2x += $bd
-global $spot4x[] = [ $1x,$2x,$1x,$2x ]
-global $spot4y[] = [ $1y,$1y,$2y,$2y ] 
-		*/
-		
-		
-		pixpos.Add( new Point(x , y ));
-
+ 		
 		public MainForm()
 		{
+			int i,j,ox=1586,oy=778;
+
 			InitializeComponent();
 
-			int i,j,ox=1586,oy=778;
-			
-			//Log( "Generating data" );
+	 		int x1 = ax+os;
+	 		int x2 = x1+sd;
+	 		int y1 = ay+os;
+	 		int y2 = y1+sd;
+	
+	 		for(i=0; i<4; i++)
+	 		{
+	 			pixpos.Add( new Point( x1,y1 ));
+	 			pixpos.Add( new Point( x1,y2 ));
+	 			pixpos.Add( new Point( x2,y1 ));
+	 			pixpos.Add( new Point( x2,y2 ));
+	 			
+				x1 += bd;
+				x2 += bd;
+	 		}
 
-			List<List<Point>> trackers = new List<List<Point>>();
-			
-			//GCD
-			for (j=0; j<10; j++)
-			{
-				List<Point> trk = new List<Point>();
-				for (i=0; i<10; i++)
-				{
-					trk.Add( new Point( ox+5+(i*10), oy+5+(j*16) ));
-				}
-				trackers.Add( trk );
-			}
-			
-			List<Point> spots = new List<Point>();
-			for (i=0; i<8; i++)
-			{
-				spots.Add( new Point( ox+120, oy+5+(j*16) ));
-			}
-			//infatuation empaty commitment
+	 		Rectangle bb = WindowHelper.BoundingBox( pixpos );
 
+	 		Stopwatch sw = Stopwatch.StartNew();
+	 		
+	 		List<uint> pxs = WindowHelper.GetSCListPixelColors( pixpos,bb );
 			
-			for (j=0; j<10; j++)
-				for (i=0; i<10; i++)
-					pixpos.Add( trackers[j][i] );
-			
-			for (j=0; j<8; j++)
-					pixpos.Add( spots[j] );
+	 		sw.Stop();
 
-			List<uint> pxs = WindowHelper.GetSCListPixelColors( pixpos );
+	 		Log( String.Format("Time Version 4: {0}", sw.Elapsed ));
+	 		
+	 		
+			//TimeSpan ts = DateTime.Now.TimeOfDay;
+			//basetime = (Int64) ((3600000*ts.Hours)+(60000*ts.Minutes)+(1000*ts.Seconds)+ts.Milliseconds);
 		
-			
-
-		
-			InitializePlayerStatus();
-			
-			TimeSpan ts = DateTime.Now.TimeOfDay;
-			
-			basetime = (Int64) ((3600000*ts.Hours)+(60000*ts.Minutes)+(1000*ts.Seconds)+ts.Milliseconds);
-			
-			int limit = 4000;
-			Random rnd = new Random();
 			
 			
 			//Version 3 [500 ~0.05s 1000 ~0.05s 4000 ~0.05s] :)
@@ -213,6 +181,7 @@ global $spot4y[] = [ $1y,$1y,$2y,$2y ]
 		
 		void myEvent(object source, EventArgs e)
 		{
+			/*
 			TimeSpan ts = DateTime.Now.TimeOfDay;
 
 			Int64 spantime = (Int64) ((3600000*ts.Hours)+(60000*ts.Minutes)+(1000*ts.Seconds)+ts.Milliseconds);
@@ -234,11 +203,12 @@ global $spot4y[] = [ $1y,$1y,$2y,$2y ]
 			{
 				Tick();
 			}
-		
+			*/
 		}
 			
 		void UpdatePlayerStatus()
 		{
+			/*
 			int i;
 			List<uint> pixcol = WindowHelper.GetSCListPixelColors(pixpos);
 			
@@ -269,6 +239,7 @@ global $spot4y[] = [ $1y,$1y,$2y,$2y ]
 			//if (lastPlayerStatus.value>120) 
 			//	lastPlayerStatus.value = 120;
 			//Log("Adding {0} focus => {1}", v, lastPlayerStatus.value);
+			*/
 		}
 		
 		void UpdateStatus()
@@ -286,6 +257,7 @@ global $spot4y[] = [ $1y,$1y,$2y,$2y ]
 			// TODO: gcd check here !
 			
 			// SpellStatus
+			/*
 			for (int i=0; i<spells.Length; i++)
 			{
 				if (spellstatuses[i].availableat<=currenttime &&			//spell is available at this time
@@ -367,6 +339,7 @@ global $spot4y[] = [ $1y,$1y,$2y,$2y ]
 			}
 			else
 				Log(String.Format("{0,8} {1,4}: <n/a>", currenttime, lastPlayerStatus.value));
+			*/
 		}
 		
 		void Button1Click(object sender, EventArgs e)
@@ -375,11 +348,13 @@ global $spot4y[] = [ $1y,$1y,$2y,$2y ]
 		
 		void InitializePlayerStatus()
 		{
+			/*
 			lastPlayerStatus.health = 320000;
 			lastPlayerStatus.value 	= 120;
 			lastPlayerStatus.tokens = 0;			
 			lastPlayerStatus.gcdoff_at = 0;
 			lastPlayerStatus.timestamp = 0;
+			*/
 		}
 		
 		void Label1Click(object sender, EventArgs e)
@@ -437,7 +412,7 @@ global $spot4y[] = [ $1y,$1y,$2y,$2y ]
     		int ymin = y_query.Min();
     		int ymax = y_query.Max();
 
-    		return new Rectangle(xmin, ymin, xmax - xmin, ymax - ymin);
+    		return new Rectangle(xmin, ymin, (xmax - xmin)+1, (ymax - ymin)+1);
 		}
 		
 		static public List<uint> GetSCListPixelColors(List<Point> ps, Rectangle boundingbox)
@@ -447,9 +422,9 @@ global $spot4y[] = [ $1y,$1y,$2y,$2y ]
 			Image img = sc.CaptureScreenRectangle(boundingbox);
 			Bitmap bmp = new Bitmap(img);
 	        List<uint> pix = new List<uint>();
-	        for (int i=0; i<xs.Count; i++)
+	        for (int i=0; i<ps.Count; i++)
 	        {
-	        	System.Drawing.Color cl = bmp.GetPixel(xs[i],ys[i]);
+	        	System.Drawing.Color cl = bmp.GetPixel(ps[i].X-boundingbox.X,ps[i].Y-boundingbox.Y);
 	        	pix.Add((uint)(cl.ToArgb()&0x00FFFFFF));
 	        }
 	        return pix;
@@ -554,11 +529,11 @@ global $spot4y[] = [ $1y,$1y,$2y,$2y ]
             IntPtr hdcDest = GDI32.CreateCompatibleDC(hdcSrc);
             // create a bitmap we can copy it to,
             // using GetDeviceCaps to get the width/height
-            IntPtr hBitmap = GDI32.CreateCompatibleBitmap(hdcSrc,rectangle.width,rectangle.height);
+            IntPtr hBitmap = GDI32.CreateCompatibleBitmap(hdcSrc,rectangle.Width,rectangle.Height);
             // select the bitmap object
             IntPtr hOld = GDI32.SelectObject(hdcDest,hBitmap);
             // bitblt over
-            GDI32.BitBlt(hdcDest,0,0,rectangle.width,rectangle.height,hdcSrc,rectangle.left,rectangle.top,GDI32.SRCCOPY);
+            GDI32.BitBlt(hdcDest,0,0,rectangle.Width,rectangle.Height,hdcSrc,rectangle.Left,rectangle.Top,GDI32.SRCCOPY);
             // restore selection
             GDI32.SelectObject(hdcDest,hOld);
             // clean up
