@@ -23,16 +23,16 @@ namespace MSBash
 	/// 
 	public class Spell
 	{
-		string key;
-		string name;
-		int    pos;
-		int[4] vals;
+		public String key;
+		public String name;
+		public int    pos;
+		public int[] vals = new int[4];
 		
-		public Spell(string line)			
+		public Spell(String line)			
 		{
 			line = line.Replace("\t",""); //remove tabs
 			line = line.Replace(" ","");  //remove spaces
-			IList<string> tokens = line.Split(',').ToList();
+			List<String> tokens = new List<String>(line.Split(','));
 			
 			key = tokens[0];
 			name = tokens[1];
@@ -50,17 +50,18 @@ namespace MSBash
 		string toon;
 		IList<Spell> spells;
 		
-		public Load(string filename)
+		public bool Load(string filename)
 		{
 			string[] lines = System.IO.File.ReadAllLines(@"C:\Users\Public\TestFolder\WriteLines2.txt");
-			if ( !((lines[0].Equals("Rotator") && lines[1].Equals("v0.2") ) )
+			if ( !((lines[0].Equals("Rotator") && lines[1].Equals("v0.2") ) ) )
 			{    
 			    toon = lines[2];
-			    for (int i=3; i< lines.Length();i++)
+			    for (int i=3; i< lines.Length;i++)
 			    {
 			    	spells.Add(new Spell(lines[i]));
 			    }
 			}
+			return true;
 		}
 		
 		public static int[,] spots = { { 828,840,683,695 }, { 894,906,683,695 } };
@@ -80,69 +81,40 @@ namespace MSBash
 		
 		List<String> logBuffer = new List<String>();
 		List<Point> pixpos = new List<Point>();
-		/*
-		int ax = 974; 		// left edge of the button
-		int ay = 798; 		// top edge of the buttons
-        int bd = 40;  		// distance between buttons
-		int sd = 12; 		// distance between samples
-		int os = 6; 		// offset from button corner for first sample point
- 		int x1 = ax+os, x2 = x1+sd;
- 		int y1 = lobal $1y = $ay+$os, $2y = $1y+$sd
 
-global $spot1x[] = [ $1x,$2x,$1x,$2x ]
-global $spot1y[] = [ $1y,$1y,$2y,$2y ]
-$1x += $bd
-$2x += $bd
-global $spot2x[] = [ $1x,$2x,$1x,$2x ]
-global $spot2y[] = [ $1y,$1y,$2y,$2y ]
-$1x += $bd
-$2x += $bd
-global $spot3x[] = [ $1x,$2x,$1x,$2x ]
-global $spot3y[] = [ $1y,$1y,$2y,$2y ]
-$1x += $bd
-$2x += $bd
-global $spot4x[] = [ $1x,$2x,$1x,$2x ]
-global $spot4y[] = [ $1y,$1y,$2y,$2y ] 
-		*/
-		
-		
-		pixpos.Add( new Point(x , y ));
+		const int ax = 974; 		// left edge of the button
+		const int ay = 798; 		// top edge of the buttons
+        const int bd = 40;  		// distance between buttons
+		const int sd = 12; 		// distance between samples
+		const int os = 6; 		// offset from button corner for first sample point
 
+		Spells spells = new Spells();
+		
 		public MainForm()
 		{
+
 			InitializeComponent();
 
-			int i,j,ox=1586,oy=778;
+			spells.Load("");
 			
+			int i;
+
+			int x1 = ax+os;
+			int x2 = x1+sd;
+	 		int y1 = ay+os;
+	 		int y2 = y1+sd;
+			
+			for (i=0; i<4; i++)
+			{
+	 			pixpos.Add(new Point(x1,y1));
+	 			pixpos.Add(new Point(x1,y2));
+	 			pixpos.Add(new Point(x2,y1));
+	 			pixpos.Add(new Point(x2,y2));
+	 		
+	 			x1 += bd; x2+= bd;
+			}
 			//Log( "Generating data" );
 
-			List<List<Point>> trackers = new List<List<Point>>();
-			
-			//GCD
-			for (j=0; j<10; j++)
-			{
-				List<Point> trk = new List<Point>();
-				for (i=0; i<10; i++)
-				{
-					trk.Add( new Point( ox+5+(i*10), oy+5+(j*16) ));
-				}
-				trackers.Add( trk );
-			}
-			
-			List<Point> spots = new List<Point>();
-			for (i=0; i<8; i++)
-			{
-				spots.Add( new Point( ox+120, oy+5+(j*16) ));
-			}
-			//infatuation empaty commitment
-
-			
-			for (j=0; j<10; j++)
-				for (i=0; i<10; i++)
-					pixpos.Add( trackers[j][i] );
-			
-			for (j=0; j<8; j++)
-					pixpos.Add( spots[j] );
 
 			List<uint> pxs = WindowHelper.GetSCListPixelColors( pixpos );
 		
@@ -153,10 +125,10 @@ global $spot4y[] = [ $1y,$1y,$2y,$2y ]
 			
 			TimeSpan ts = DateTime.Now.TimeOfDay;
 			
-			basetime = (Int64) ((3600000*ts.Hours)+(60000*ts.Minutes)+(1000*ts.Seconds)+ts.Milliseconds);
+			//basetime = (Int64) ((3600000*ts.Hours)+(60000*ts.Minutes)+(1000*ts.Seconds)+ts.Milliseconds);
 			
-			int limit = 4000;
-			Random rnd = new Random();
+			//int limit = 4000;
+			//Random rnd = new Random();
 			
 			
 			//Version 3 [500 ~0.05s 1000 ~0.05s 4000 ~0.05s] :)
@@ -213,11 +185,11 @@ global $spot4y[] = [ $1y,$1y,$2y,$2y ]
 		
 		void myEvent(object source, EventArgs e)
 		{
-			TimeSpan ts = DateTime.Now.TimeOfDay;
+			//TimeSpan ts = DateTime.Now.TimeOfDay;
 
-			Int64 spantime = (Int64) ((3600000*ts.Hours)+(60000*ts.Minutes)+(1000*ts.Seconds)+ts.Milliseconds);
-			currenttime = spantime-basetime; 
-			
+			//Int64 spantime = (Int64) ((3600000*ts.Hours)+(60000*ts.Minutes)+(1000*ts.Seconds)+ts.Milliseconds);
+			//currenttime = spantime-basetime; 
+			/*
 			long nextat = 0;
 			if (lastPlayerStatus.gcdoff_at > lastPlayerStatus.castdone_at )
 			{
@@ -234,13 +206,12 @@ global $spot4y[] = [ $1y,$1y,$2y,$2y ]
 			{
 				Tick();
 			}
-		
+			*/
 		}
 			
 		void UpdatePlayerStatus()
 		{
 			int i;
-			List<uint> pixcol = WindowHelper.GetSCListPixelColors(pixpos);
 			
 			//Health:
 			int health=0;
@@ -259,10 +230,10 @@ global $spot4y[] = [ $1y,$1y,$2y,$2y ]
 			}
 			
 			//Spell Statuses
-			for (i=100; i<108; i++)
-			{
-				spellstatuses[i-100].ready = (pixcol[i]==0x0000FF01);
-			}
+			//for (i=100; i<108; i++)
+			//{
+				//spellstatuses[i-100].ready = (pixcol[i]==0x0000FF01);
+			//}
 			
 			//short v = (short) (((currenttime-lastPlayerStatus.timestamp)*2)/100);
 			//lastPlayerStatus.value += v;
@@ -279,94 +250,50 @@ global $spot4y[] = [ $1y,$1y,$2y,$2y ]
 
 		void Tick()
 		{
-			// Get statuses
-			
-			UpdateStatus();
-			
-			// TODO: gcd check here !
-			
-			// SpellStatus
-			for (int i=0; i<spells.Length; i++)
+			// if ( in attackmode!)
+			List<uint> pixcol = WindowHelper.GetSCListPixelColors(pixpos);
+			int spellno = 0, cast = -1;
+			foreach (Spell spell in spells.spells)
 			{
-				if (spellstatuses[i].availableat<=currenttime &&			//spell is available at this time
-				    spells[i].value<lastPlayerStatus.value				//player have enough value
-				)
+				if (spell.pos==1 && attackmode & USE_POS1 )
 				{
-					spellstatuses[i].ready = true;						// => spell is ready
+					if ( pixcol[0]==spell.vals[0] && pixcol[1]==spell.vals[1] && pixcol[2]==spell.vals[2] && pixcol[3]==spell.vals[3] )
+					{
+						cast = spellno;
+						break;
+					}
+				}
 
-					// Special overwrite rules:
-					if (spells[i].id==2)
+				if (spell.pos==2 && attackmode & USE_POS2 )
+				{
+					if ( pixcol[4]==spell.vals[0] && pixcol[5]==spell.vals[1] && pixcol[6]==spell.vals[2] && pixcol[7]==spell.vals[3] )
 					{
-						//Kill Shot never ready yet as we dont know targets health yet
-						spellstatuses[i].ready = false;						
-					}
-					if (spells[i].id==4)
-					{
-						// Focus Shot only if value < 50
-						if (lastPlayerStatus.value > 30)
-							spellstatuses[i].ready = false;						
-					}
-					if (spells[i].id==5)
-					{
-						// Arcane Shot only if value > 90
-						if (lastPlayerStatus.value < 80)
-							spellstatuses[i].ready = false;						
+						cast = spellno;
+						break;
 					}
 				}
-			}
 
-			// Prioritize
-			pick_order = new List<Int64>();
-			for (int i=0; i<spells.Length; i++)			
-			{
-				if (spellstatuses[i].ready)
+				if (spell.pos==3 && attackmode & USE_POS3 )
 				{
-					//Log(String.Format("Found that spell {0} is ready to cast",spells[i].name));
-					pick_order.Add((Int64)i);
-				}
-			}
-			
-			prio_order = new List<Int64>();
-			for (int i=0; i<pick_order.Count; i++)			
-			{
-				bool added = false;
-				if (prio_order.Count>0)
-				{
-					for (int j=0; j<i; j++)
+					if ( pixcol[8]==spell.vals[0] && pixcol[9]==spell.vals[1] && pixcol[10]==spell.vals[2] && pixcol[11]==spell.vals[3] )
 					{
-						if (spells[prio_order[j]].prios>spells[pick_order[i]].prios)
-						{
-							prio_order.Insert(j, (Int64)pick_order[i]);
-							added = true;
-							break;
-						}
+						cast = spellno;
+						break;
 					}
 				}
-				if (!added)
-					prio_order.Add((Int64)pick_order[i]);
+
+				if (spell.pos==4 && attackmode & USE_POS4 )
+				{
+					if ( pixcol[12]==spell.vals[0] && pixcol[13]==spell.vals[1] && pixcol[14]==spell.vals[2] && pixcol[15]==spell.vals[3] )
+					{
+						cast = spellno;
+						break;
+					}
+				}
+
+				spellno++;
 			}
 			
-			if (prio_order.Count>0)
-			{
-				int prio = (int)prio_order[0];
-				//Log(String.Format("At {0} list is: ({1})",currenttime, lastPlayerStatus.value));
-				for (int i=0; i<prio_order.Count && i<2; i++)
-				{
-					//Log(String.Format("{0}\t{1}\t{2}", i, spells[prio_order[i]].name, spells[prio_order[i]].value));
-				}
-				
-				//Pick top one to cast!
-				Log(String.Format("{0,8} {1,4}: {3}({4})", currenttime, lastPlayerStatus.value, prio, spells[prio].name,spells[prio].value));
-				spellstatuses[prio].castedat= currenttime;
-				spellstatuses[prio].availableat=(currenttime+spells[prio].casttime+spells[prio].cooldown);
-				spellstatuses[prio].ready = false;
-				lastPlayerStatus.value -= spells[prio].value;
-				lastPlayerStatus.timestamp = currenttime;
-				lastPlayerStatus.gcdoff_at = (spells[prio].globalcd+currenttime);
-				lastPlayerStatus.castdone_at = (spells[prio].casttime+currenttime);
-			}
-			else
-				Log(String.Format("{0,8} {1,4}: <n/a>", currenttime, lastPlayerStatus.value));
 		}
 		
 		void Button1Click(object sender, EventArgs e)
@@ -442,7 +369,7 @@ global $spot4y[] = [ $1y,$1y,$2y,$2y ]
 	        return pix;
 		}
 	        
-		static public List<uint> GetSCListPixelColors(List<Point> ps)
+		static public List<uint> GetSCListPixelColors(List<Point> ps, Point tl, Point br)
 		{
 			ScreenCapture sc = new ScreenCapture();
 			// capture the screen and stores it in a image
@@ -480,6 +407,7 @@ global $spot4y[] = [ $1y,$1y,$2y,$2y ]
         {
             return CaptureWindow( User32.GetDesktopWindow() );
         }
+        
         /// <summary>
         /// Creates an Image object containing a screen shot of a specific window
         /// </summary>
@@ -515,6 +443,40 @@ global $spot4y[] = [ $1y,$1y,$2y,$2y ]
             GDI32.DeleteObject(hBitmap);
             return img;
         }
+        
+        /// <summary>
+        /// Creates an Image object containing a screen shot of the entire desktop
+        /// </summary>
+        /// <returns></returns>
+        public Image CaptureScreenPart(Point tl, Point br)
+        {
+            return CaptureWindow( User32.GetDesktopWindow(), tl, br );
+        }
+        
+        /// <summary>
+        /// Creates an Image object containing a screen shot of a specific window
+        /// </summary>
+        /// <param name="handle">The handle to the window. 
+        /// (In windows forms, this is obtained by the Handle property)</param>
+        /// <returns></returns>
+        public Image CaptureWindow(IntPtr handle, Point tl, Point br)
+        {
+            IntPtr hdcSrc = User32.GetWindowDC(handle);
+            IntPtr hdcDest = GDI32.CreateCompatibleDC(hdcSrc);
+            IntPtr hBitmap = GDI32.CreateCompatibleBitmap(hdcSrc,br.x-tl.x,br.y-tl.y);
+            IntPtr hOld = GDI32.SelectObject(hdcDest,hBitmap);
+            GDI32.BitBlt(hdcDest,0,0,width,height,hdcSrc,tl.x,tl.y,GDI32.SRCCOPY);
+            GDI32.SelectObject(hdcDest,hOld);
+            GDI32.DeleteDC(hdcDest);
+            User32.ReleaseDC(handle,hdcSrc);
+            Image img = Image.FromHbitmap(hBitmap);
+            GDI32.DeleteObject(hBitmap);
+            return img;
+        }
+
+
+
+            
         /// <summary>
         /// Captures a screen shot of a specific window, and saves it to a file
         /// </summary>

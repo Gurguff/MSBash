@@ -13,7 +13,7 @@ namespace MSBash
 	/// <summary>
 	/// Description of NSpells.
 	/// </summary>
-	public virtual class NSpell 
+	public class NSpell 
 	{
 		//static part:
 		public long id;
@@ -39,10 +39,12 @@ namespace MSBash
  		}
 		
 		
- 		public int Trigger(NSpellStatus ss, PlayerStatus ps)
+ 		/*
+   		public int Trigger(NSpellStatus ss, PlayerStatus ps)
  		{
  			return -1;
  		}
+ 		*/
 	}
 	
 	public class ArcaneShot : NSpell
@@ -51,6 +53,7 @@ namespace MSBash
 		{
 			NSpell( 1, "Arcane Shot", 0,0,0,1500,40,10,10 );
 		}
+		/*
 		public int Trigger(NSpellStatus ss, PlayerStatus ps)
 		{
  			if (ps.value > 90)
@@ -58,6 +61,7 @@ namespace MSBash
 
  			return -1;
 		}
+		*/
 	}
 	
 	public class KillCommand : NSpell
@@ -66,11 +70,13 @@ namespace MSBash
 		{
 			NSpell( 2, "Kill Command", 0,6000,0,1500, 40, 5, 7 );
 		}
+		/*
 		public int Trigger(NSpellStatus ss, PlayerStatus ps)
 		{
 			if (ps.value > value)
 				return 1;
 			return -1;
 		}
+		*/
 	}
 }
