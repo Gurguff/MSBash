@@ -24,11 +24,12 @@ namespace MSBash
 	/// 
 	public class Spell
 	{
-		string key;
-		string name;
-		int    pos;
-		int[]  vals = new int[4];
-		public Spell(String line)			
+		public string key;
+		public string name;
+		public int    pos;
+		public int[]  vals = new int[4];
+		
+		public void SpellLine(String line)			
 		{
 			line = line.Replace("\t",""); //remove tabs
 			line = line.Replace(" ","");  //remove spaces
@@ -44,28 +45,31 @@ namespace MSBash
 		}
 	}
 	
-	
 	public class Spells
 	{
-		string toon;
-		IList<Spell> spells;
+		public string toon;
+		public List<Spell> spells = new List<Spell>();
 		
 		public bool Load(string filename)
 		{
-			string[] lines = System.IO.File.ReadAllLines(@"C:\Users\Public\TestFolder\WriteLines2.txt");
-			if ( !((lines[0].Equals("Rotator") && lines[1].Equals("v0.2") ) ) )
+			string[] lines = System.IO.File.ReadAllLines(filename);
+			if ( ((lines[0].Equals("Rotator") && lines[1].Equals("v0.2") ) ) )
 			{    
 			    toon = lines[2];
 			    for (int i=3; i< lines.Length;i++)
 			    {
-			    	spells.Add(new Spell(lines[i]));
+			    	if (lines[i].Count()>8)
+			    	{
+			    		Spell s = new Spell();
+			    		s.SpellLine(lines[i]);
+			    		spells.Add(s);
+			    	}
 			    }
 			}
 			return true;
 		}
 		
 		public static int[,] spots = { { 828,840,683,695 }, { 894,906,683,695 } };
-		
 		
 		public Spells()
 		{
@@ -75,12 +79,15 @@ namespace MSBash
 
 	public partial class MainForm : Form
 	{
-		
+ 		Rectangle boundingbox;
+		GlobalKeyboardHook gkh = new GlobalKeyboardHook();
 		Timer myTimer = new Timer();
-		
+		int mode = 0;
 		
 		List<String> logBuffer = new List<String>();
 		List<Point> pixpos = new List<Point>();
+		
+		Spells spells = null;
 
 		int ax = 974; 		// left edge of the button
 		int ay = 798; 		// top edge of the buttons
@@ -88,9 +95,11 @@ namespace MSBash
 		int sd = 12; 		// distance between samples
 		int os = 6; 		// offset from button corner for first sample point
  		
+		bool InBashMode = false;
+		
 		public MainForm()
 		{
-			int i,j,ox=1586,oy=778;
+			int i;
 
 			InitializeComponent();
 
@@ -102,63 +111,41 @@ namespace MSBash
 	 		for(i=0; i<4; i++)
 	 		{
 	 			pixpos.Add( new Point( x1,y1 ));
-	 			pixpos.Add( new Point( x1,y2 ));
 	 			pixpos.Add( new Point( x2,y1 ));
+	 			pixpos.Add( new Point( x1,y2 ));
 	 			pixpos.Add( new Point( x2,y2 ));
 	 			
 				x1 += bd;
 				x2 += bd;
 	 		}
 
-	 		Rectangle bb = WindowHelper.BoundingBox( pixpos );
+	 		boundingbox = WindowHelper.BoundingBox( pixpos );
 
+	 		myTimer.Tick += new EventHandler(myEvent);
+    		myTimer.Interval = 100;
+    		myTimer.Enabled = true;
+    		myTimer.Start();
+	 		
+    		spells = new Spells();
+    		if (!spells.Load(@"C:\Users\jonas\Documents\WOW Scripts\MSBash\Gurguff-BM.txt"))
+    			spells = null;
+
+
+	 		/* 
+ 			//This was to check the time for getting these pixel values - 0.004 to 0.008 s
 	 		Stopwatch sw = Stopwatch.StartNew();
-	 		
 	 		List<uint> pxs = WindowHelper.GetSCListPixelColors( pixpos,bb );
-			
 	 		sw.Stop();
-
 	 		Log( String.Format("Time Version 4: {0}", sw.Elapsed ));
+	 		*/
 	 		
-	 		
-			//TimeSpan ts = DateTime.Now.TimeOfDay;
-			//basetime = (Int64) ((3600000*ts.Hours)+(60000*ts.Minutes)+(1000*ts.Seconds)+ts.Milliseconds);
-		
-			//Version 3 [500 ~0.05s 1000 ~0.05s 4000 ~0.05s] :)
-			//sw.Reset();
-			//sw.Start();
-			//	pxs = WindowHelper.GetSCListPixelColors( xs, ys );
-			//sw.Stop();
-			//Log( String.Format("Time Version 3: {0}", sw.Elapsed ));
+	 		this.Load += MainForm_Load;
+		}
 
-			
-			
-
-			
-			//
-			// TODO: Add constructor code after the InitializeComponent() call.
-			//
-			/*
-			for (int t=0; currenttime<20000; t++)
-			{
-				Tick();
-				currenttime += 300;
-				short nextat = 0;
-				if (lastPlayerStatus.gcdoff_at > lastPlayerStatus.castdone_at )
-				{
-					nextat = lastPlayerStatus.gcdoff_at;
-					//Log("gcd");
-				}
-				else
-				{
-					nextat = lastPlayerStatus.castdone_at;
-					//Log("cast");
-				}
-				if (nextat>currenttime )
-					currenttime = nextat;
-				
-			}
-			*/			
+		private void MainForm_Load(object sender, EventArgs e) {
+			gkh.HookedKeys.Add(Keys.Oem1);
+			gkh.HookedKeys.Add(Keys.Oem2); //OemQuestion
+			gkh.KeyDown += new KeyEventHandler(gkh_KeyDown);
 		}
 		
 		void Log( String msg )
@@ -176,31 +163,62 @@ namespace MSBash
 			//loglbl.Text += String.Format("{0}\n",msg) ;
 		}
 		
+		void gkh_KeyDown(object sender, KeyEventArgs e) 
+		{	
+			if (e.KeyCode == Keys.Oem1) {
+				if (spells!=null)					
+				{
+					Log("*BASH*");
+					button1.BackColor = Color.Red;
+					button1.Text = "*BASH*";
+					InBashMode = true;
+				}
+			}
+			else if ( e.KeyCode == Keys.Oem2 )
+			{
+				Log("*STOP*");
+				button1.BackColor = Color.Transparent;
+				button1.Text = "Pause";
+				InBashMode = false;
+			}
+
+			e.Handled = true;
+		}		
+		
+		// This method will be called every 50th ms. Lets bail out early if we need to!
 		void myEvent(object source, EventArgs e)
 		{
-			/*
-			TimeSpan ts = DateTime.Now.TimeOfDay;
+			if (!InBashMode || spells==null) return;
 
-			//Int64 spantime = (Int64) ((3600000*ts.Hours)+(60000*ts.Minutes)+(1000*ts.Seconds)+ts.Milliseconds);
-			//currenttime = spantime-basetime; 
-			/*
-			long nextat = 0;
-			if (lastPlayerStatus.gcdoff_at > lastPlayerStatus.castdone_at )
-			{
-				nextat = lastPlayerStatus.gcdoff_at;
-				//Log("gcd");
-			}
-			else
-			{
-				nextat = lastPlayerStatus.castdone_at;
-				//Log("cast");
-			}
-			
-			if (nextat<=currenttime )
-			{
-				Tick();
-			}
-			*/
+	 		Stopwatch sw = Stopwatch.StartNew();
+	 		List<uint> pxs = WindowHelper.GetSCListPixelColors( pixpos, boundingbox );
+	 		
+	 		Log( String.Format("{0}\t{1}\t{2}\t{3}",pxs[0], pxs[1], pxs[2], pxs[3] ) );
+	 		
+	 		int i,setspell=-1;
+	 		for (i=0; i<spells.spells.Count; i++)
+	 		{
+	 			int k=(spells.spells[i].pos-1)*4;
+				if (
+ 					(spells.spells[i].vals[0] == pxs[k+0]) &&
+ 					(spells.spells[i].vals[1] == pxs[k+1]) &&
+ 					(spells.spells[i].vals[2] == pxs[k+2]) &&
+ 					(spells.spells[i].vals[3] == pxs[k+3]) 					
+ 				)
+ 				{
+ 					setspell=i;
+ 					break;
+	 			}
+	 		}
+	 		if (setspell==-1) return; // No spell to cast
+
+	 		sw.Stop();
+
+	 		if (WindowHelper.ActivateWoW())
+	 		{
+	 			SendKeys.Send(spells.spells[setspell].key);
+		 		Log( String.Format("\t{0}\t{1}\t\t\t{2}", spells.spells[setspell].key, spells.spells[setspell].name, sw.Elapsed ));
+	 		}
 		}
 			
 		void UpdatePlayerStatus()
