@@ -7,6 +7,7 @@
  * To change this template use Tools | Options | Coding | Edit Standard Headers.
  */
 using System;
+using System.Linq;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Imaging;
@@ -23,16 +24,15 @@ namespace MSBash
 	/// 
 	public class Spell
 	{
-		public String key;
-		public String name;
-		public int    pos;
-		public int[] vals = new int[4];
-		
+		string key;
+		string name;
+		int    pos;
+		int[]  vals = new int[4];
 		public Spell(String line)			
 		{
 			line = line.Replace("\t",""); //remove tabs
 			line = line.Replace(" ","");  //remove spaces
-			List<String> tokens = new List<String>(line.Split(','));
+			List<string> tokens = new List<string>(line.Split(','));
 			
 			key = tokens[0];
 			name = tokens[1];
@@ -82,55 +82,48 @@ namespace MSBash
 		List<String> logBuffer = new List<String>();
 		List<Point> pixpos = new List<Point>();
 
-		const int ax = 974; 		// left edge of the button
-		const int ay = 798; 		// top edge of the buttons
-        const int bd = 40;  		// distance between buttons
-		const int sd = 12; 		// distance between samples
-		const int os = 6; 		// offset from button corner for first sample point
-
-		Spells spells = new Spells();
-		
+		int ax = 974; 		// left edge of the button
+		int ay = 798; 		// top edge of the buttons
+        int bd = 40;  		// distance between buttons
+		int sd = 12; 		// distance between samples
+		int os = 6; 		// offset from button corner for first sample point
+ 		
 		public MainForm()
 		{
+			int i,j,ox=1586,oy=778;
 
 			InitializeComponent();
 
-			spells.Load("");
-			
-			int i;
-
-			int x1 = ax+os;
-			int x2 = x1+sd;
+	 		int x1 = ax+os;
+	 		int x2 = x1+sd;
 	 		int y1 = ay+os;
 	 		int y2 = y1+sd;
-			
-			for (i=0; i<4; i++)
-			{
-	 			pixpos.Add(new Point(x1,y1));
-	 			pixpos.Add(new Point(x1,y2));
-	 			pixpos.Add(new Point(x2,y1));
-	 			pixpos.Add(new Point(x2,y2));
+	
+	 		for(i=0; i<4; i++)
+	 		{
+	 			pixpos.Add( new Point( x1,y1 ));
+	 			pixpos.Add( new Point( x1,y2 ));
+	 			pixpos.Add( new Point( x2,y1 ));
+	 			pixpos.Add( new Point( x2,y2 ));
+	 			
+				x1 += bd;
+				x2 += bd;
+	 		}
+
+	 		Rectangle bb = WindowHelper.BoundingBox( pixpos );
+
+	 		Stopwatch sw = Stopwatch.StartNew();
 	 		
-	 			x1 += bd; x2+= bd;
-			}
-			//Log( "Generating data" );
-
-
-			List<uint> pxs = WindowHelper.GetSCListPixelColors( pixpos );
-		
+	 		List<uint> pxs = WindowHelper.GetSCListPixelColors( pixpos,bb );
 			
+	 		sw.Stop();
 
-		
-			InitializePlayerStatus();
-			
-			TimeSpan ts = DateTime.Now.TimeOfDay;
-			
+	 		Log( String.Format("Time Version 4: {0}", sw.Elapsed ));
+	 		
+	 		
+			//TimeSpan ts = DateTime.Now.TimeOfDay;
 			//basetime = (Int64) ((3600000*ts.Hours)+(60000*ts.Minutes)+(1000*ts.Seconds)+ts.Milliseconds);
-			
-			//int limit = 4000;
-			//Random rnd = new Random();
-			
-			
+		
 			//Version 3 [500 ~0.05s 1000 ~0.05s 4000 ~0.05s] :)
 			//sw.Reset();
 			//sw.Start();
@@ -185,7 +178,8 @@ namespace MSBash
 		
 		void myEvent(object source, EventArgs e)
 		{
-			//TimeSpan ts = DateTime.Now.TimeOfDay;
+			/*
+			TimeSpan ts = DateTime.Now.TimeOfDay;
 
 			//Int64 spantime = (Int64) ((3600000*ts.Hours)+(60000*ts.Minutes)+(1000*ts.Seconds)+ts.Milliseconds);
 			//currenttime = spantime-basetime; 
@@ -211,6 +205,7 @@ namespace MSBash
 			
 		void UpdatePlayerStatus()
 		{
+			/*
 			int i;
 			
 			//Health:
@@ -240,6 +235,7 @@ namespace MSBash
 			//if (lastPlayerStatus.value>120) 
 			//	lastPlayerStatus.value = 120;
 			//Log("Adding {0} focus => {1}", v, lastPlayerStatus.value);
+			*/
 		}
 		
 		void UpdateStatus()
@@ -251,9 +247,19 @@ namespace MSBash
 		void Tick()
 		{
 			// if ( in attackmode!)
-			List<uint> pixcol = WindowHelper.GetSCListPixelColors(pixpos);
-			int spellno = 0, cast = -1;
+			//List<uint> pixcol = WindowHelper.GetSCListPixelColors(pixpos);
+			//int spellno = 0, cast = -1;
+			/*
 			foreach (Spell spell in spells.spells)
+
+				// Get statuses
+			
+			UpdateStatus();
+			
+			// TODO: gcd check here !
+			
+			// SpellStatus
+			for (int i=0; i<spells.Length; i++)
 			{
 				if (spell.pos==1 && attackmode & USE_POS1 )
 				{
@@ -294,6 +300,28 @@ namespace MSBash
 				spellno++;
 			}
 			
+			if (prio_order.Count>0)
+			{
+				int prio = (int)prio_order[0];
+				//Log(String.Format("At {0} list is: ({1})",currenttime, lastPlayerStatus.value));
+				for (int i=0; i<prio_order.Count && i<2; i++)
+				{
+					//Log(String.Format("{0}\t{1}\t{2}", i, spells[prio_order[i]].name, spells[prio_order[i]].value));
+				}
+				
+				//Pick top one to cast!
+				Log(String.Format("{0,8} {1,4}: {3}({4})", currenttime, lastPlayerStatus.value, prio, spells[prio].name,spells[prio].value));
+				spellstatuses[prio].castedat= currenttime;
+				spellstatuses[prio].availableat=(currenttime+spells[prio].casttime+spells[prio].cooldown);
+				spellstatuses[prio].ready = false;
+				lastPlayerStatus.value -= spells[prio].value;
+				lastPlayerStatus.timestamp = currenttime;
+				lastPlayerStatus.gcdoff_at = (spells[prio].globalcd+currenttime);
+				lastPlayerStatus.castdone_at = (spells[prio].casttime+currenttime);
+			}
+			else
+				Log(String.Format("{0,8} {1,4}: <n/a>", currenttime, lastPlayerStatus.value));
+			*/
 		}
 		
 		void Button1Click(object sender, EventArgs e)
@@ -302,11 +330,13 @@ namespace MSBash
 		
 		void InitializePlayerStatus()
 		{
+			/*
 			lastPlayerStatus.health = 320000;
 			lastPlayerStatus.value 	= 120;
 			lastPlayerStatus.tokens = 0;			
 			lastPlayerStatus.gcdoff_at = 0;
 			lastPlayerStatus.timestamp = 0;
+			*/
 		}
 		
 		void Label1Click(object sender, EventArgs e)
@@ -354,16 +384,29 @@ namespace MSBash
 		}
 		
 		// 
-		static public List<uint> GetSCListPixelColors(List<int> xs, List<int> ys)
+		static public Rectangle BoundingBox(IEnumerable<Point> points)
+		{
+    		var x_query = from Point p in points select p.X;
+    		int xmin = x_query.Min();
+    		int xmax = x_query.Max();
+
+    		var y_query = from Point p in points select p.Y;
+    		int ymin = y_query.Min();
+    		int ymax = y_query.Max();
+
+    		return new Rectangle(xmin, ymin, (xmax - xmin)+1, (ymax - ymin)+1);
+		}
+		
+		static public List<uint> GetSCListPixelColors(List<Point> ps, Rectangle boundingbox)
 		{
 			ScreenCapture sc = new ScreenCapture();
 			// capture the screen and stores it in a image
-			Image img = sc.CaptureScreen();
+			Image img = sc.CaptureScreenRectangle(boundingbox);
 			Bitmap bmp = new Bitmap(img);
 	        List<uint> pix = new List<uint>();
-	        for (int i=0; i<xs.Count; i++)
+	        for (int i=0; i<ps.Count; i++)
 	        {
-	        	System.Drawing.Color cl = bmp.GetPixel(xs[i],ys[i]);
+	        	System.Drawing.Color cl = bmp.GetPixel(ps[i].X-boundingbox.X,ps[i].Y-boundingbox.Y);
 	        	pix.Add((uint)(cl.ToArgb()&0x00FFFFFF));
 	        }
 	        return pix;
@@ -463,9 +506,9 @@ namespace MSBash
         {
             IntPtr hdcSrc = User32.GetWindowDC(handle);
             IntPtr hdcDest = GDI32.CreateCompatibleDC(hdcSrc);
-            IntPtr hBitmap = GDI32.CreateCompatibleBitmap(hdcSrc,br.x-tl.x,br.y-tl.y);
+            IntPtr hBitmap = GDI32.CreateCompatibleBitmap(hdcSrc,br.X-tl.X,br.Y-tl.Y);
             IntPtr hOld = GDI32.SelectObject(hdcDest,hBitmap);
-            GDI32.BitBlt(hdcDest,0,0,width,height,hdcSrc,tl.x,tl.y,GDI32.SRCCOPY);
+            GDI32.BitBlt(hdcDest,0,0,br.X-tl.X,br.Y-tl.Y,hdcSrc,tl.X,tl.Y,GDI32.SRCCOPY);
             GDI32.SelectObject(hdcDest,hOld);
             GDI32.DeleteDC(hdcDest);
             User32.ReleaseDC(handle,hdcSrc);
@@ -477,6 +520,50 @@ namespace MSBash
 
 
             
+        /// <summary>
+        /// Creates an Image object containing part of a screen shot of the entire desktop specified by a rectangle
+        /// </summary>
+        /// <returns></returns>
+        public Image CaptureScreenRectangle(Rectangle rectangle)
+        {
+            return CaptureWindowRectangle( User32.GetDesktopWindow(), rectangle );
+        }
+        /// <summary>
+        /// Creates an Image object containing a screen shot of a specific part (rectangle) of awindow 
+        /// </summary>
+        /// <param name="handle">The handle to the window. 
+        /// (In windows forms, this is obtained by the Handle property)</param>
+        /// <param name="rectangle">The rectangle specifying the part</param>
+        /// <returns></returns>
+        public Image CaptureWindowRectangle(IntPtr handle, Rectangle rectangle)
+        {
+            // get te hDC of the target window
+            IntPtr hdcSrc = User32.GetWindowDC(handle);
+            // get the size
+            int width = rectangle.Width;
+            int height = rectangle.Height;
+            // create a device context we can copy to
+            IntPtr hdcDest = GDI32.CreateCompatibleDC(hdcSrc);
+            // create a bitmap we can copy it to,
+            // using GetDeviceCaps to get the width/height
+            IntPtr hBitmap = GDI32.CreateCompatibleBitmap(hdcSrc,rectangle.Width,rectangle.Height);
+            // select the bitmap object
+            IntPtr hOld = GDI32.SelectObject(hdcDest,hBitmap);
+            // bitblt over
+            GDI32.BitBlt(hdcDest,0,0,rectangle.Width,rectangle.Height,hdcSrc,rectangle.Left,rectangle.Top,GDI32.SRCCOPY);
+            // restore selection
+            GDI32.SelectObject(hdcDest,hOld);
+            // clean up
+            GDI32.DeleteDC(hdcDest);
+            User32.ReleaseDC(handle,hdcSrc);
+            // get a .NET image object for it
+            Image img = Image.FromHbitmap(hBitmap);
+            // free up the Bitmap object
+            GDI32.DeleteObject(hBitmap);
+            return img;
+        }
+        	
+        
         /// <summary>
         /// Captures a screen shot of a specific window, and saves it to a file
         /// </summary>
@@ -496,6 +583,29 @@ namespace MSBash
         public void CaptureScreenToFile(string filename, ImageFormat format)
         {
             Image img = CaptureScreen();
+            img.Save(filename,format);
+        }
+        /// <summary>
+        /// Captures a part of a screen shot of a specific window, and saves it to a file
+        /// </summary>
+        /// <param name="handle"></param>
+        /// <param name="rectangle"></param>
+        /// <param name="filename"></param>
+        /// <param name="format"></param>
+        public void CaptureWindowToFile(IntPtr handle, Rectangle rectangle, string filename, ImageFormat format)
+        {
+            Image img = CaptureWindowRectangle(handle,rectangle);
+            img.Save(filename,format);
+        }
+        /// <summary>
+        /// Captures a part of a screen shot of the entire desktop, and saves it to a file
+        /// </summary>
+        /// <param name="rectangle"></param>
+        /// <param name="filename"></param>
+        /// <param name="format"></param>
+        public void CaptureScreenToFile(Rectangle rectangle, string filename, ImageFormat format)
+        {
+            Image img = CaptureScreenRectangle(rectangle);
             img.Save(filename,format);
         }
 
