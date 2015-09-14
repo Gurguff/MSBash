@@ -22,60 +22,6 @@ namespace MSBash
 	/// Description of MainForm.
 	/// </summary>
 	/// 
-	public class Spell
-	{
-		public string key;
-		public string name;
-		public int    pos;
-		public int[]  vals = new int[4];
-		
-		public void SpellLine(String line)			
-		{
-			line = line.Replace("\t",""); //remove tabs
-			line = line.Replace(" ","");  //remove spaces
-			List<string> tokens = new List<string>(line.Split(','));
-			
-			key = tokens[0];
-			name = tokens[1];
-			pos = System.Int32.Parse(tokens[2]);
-			vals[0] = System.Int32.Parse(tokens[3]);
-			vals[1] = System.Int32.Parse(tokens[4]);
-			vals[2] = System.Int32.Parse(tokens[5]);
-			vals[3] = System.Int32.Parse(tokens[6]);
-		}
-	}
-	
-	public class Spells
-	{
-		public string toon;
-		public List<Spell> spells = new List<Spell>();
-		
-		public bool Load(string filename)
-		{
-			string[] lines = System.IO.File.ReadAllLines(filename);
-			if ( ((lines[0].Equals("Rotator") && lines[1].Equals("v0.2") ) ) )
-			{    
-			    toon = lines[2];
-			    for (int i=3; i< lines.Length;i++)
-			    {
-			    	if (lines[i].Count()>8)
-			    	{
-			    		Spell s = new Spell();
-			    		s.SpellLine(lines[i]);
-			    		spells.Add(s);
-			    	}
-			    }
-			}
-			return true;
-		}
-		
-		public static int[,] spots = { { 828,840,683,695 }, { 894,906,683,695 } };
-		
-		public Spells()
-		{
-		}
-		
-	}
 
 	public partial class MainForm : Form
 	{
@@ -361,8 +307,67 @@ namespace MSBash
 		{
 				
 		}
+		void QuitToolStripMenuItemClick(object sender, EventArgs e)
+		{
+			Application.Exit();
+		}
 	}
 		
+	public class Spell
+	{
+		public string key;
+		public string name;
+		public int    pos;
+		public int[]  vals = new int[4];
+		
+		public void SpellLine(String line)			
+		{
+			line = line.Replace("\t",""); //remove tabs
+			line = line.Replace(" ","");  //remove spaces
+			List<string> tokens = new List<string>(line.Split(','));
+			
+			key = tokens[0];
+			name = tokens[1];
+			pos = System.Int32.Parse(tokens[2]);
+			vals[0] = System.Int32.Parse(tokens[3]);
+			vals[1] = System.Int32.Parse(tokens[4]);
+			vals[2] = System.Int32.Parse(tokens[5]);
+			vals[3] = System.Int32.Parse(tokens[6]);
+		}
+	}
+	
+	public class Spells
+	{
+		public string toon;
+		public List<Spell> spells = new List<Spell>();
+		
+		public bool Load(string filename)
+		{
+			string[] lines = System.IO.File.ReadAllLines(filename);
+			if ( ((lines[0].Equals("Rotator") && lines[1].Equals("v0.2") ) ) )
+			{    
+			    toon = lines[2];
+			    for (int i=3; i< lines.Length;i++)
+			    {
+			    	if (lines[i].Count()>8)
+			    	{
+			    		Spell s = new Spell();
+			    		s.SpellLine(lines[i]);
+			    		spells.Add(s);
+			    	}
+			    }
+			}
+			return true;
+		}
+		
+		public static int[,] spots = { { 828,840,683,695 }, { 894,906,683,695 } };
+		
+		public Spells()
+		{
+		}
+		
+	}
+
 	public static class WindowHelper
 	{
 	    // ******************************************************************
