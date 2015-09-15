@@ -46,11 +46,13 @@ namespace MSBash
 			this.fileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
 			this.quitToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
 			this.editToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+			this.loadToonToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
 			this.toolsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
 			this.resetWowWindowToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
 			this.captureToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
 			this.statusStrip1 = new System.Windows.Forms.StatusStrip();
 			this.toolStripStatusLabel1 = new System.Windows.Forms.ToolStripStatusLabel();
+			this.openFileDialog1 = new System.Windows.Forms.OpenFileDialog();
 			this.menuStrip1.SuspendLayout();
 			this.statusStrip1.SuspendLayout();
 			this.SuspendLayout();
@@ -61,7 +63,7 @@ namespace MSBash
 			this.button1.Name = "button1";
 			this.button1.Size = new System.Drawing.Size(75, 23);
 			this.button1.TabIndex = 0;
-			this.button1.Text = "Load";
+			this.button1.Text = "GO/STOP";
 			this.button1.UseVisualStyleBackColor = true;
 			this.button1.Click += new System.EventHandler(this.Button1Click);
 			// 
@@ -71,8 +73,9 @@ namespace MSBash
 			this.button2.Name = "button2";
 			this.button2.Size = new System.Drawing.Size(75, 23);
 			this.button2.TabIndex = 1;
-			this.button2.Text = "Save";
+			this.button2.Text = "Reset";
 			this.button2.UseVisualStyleBackColor = true;
+			this.button2.Click += new System.EventHandler(this.Button2Click);
 			// 
 			// label1
 			// 
@@ -132,15 +135,24 @@ namespace MSBash
 			// quitToolStripMenuItem
 			// 
 			this.quitToolStripMenuItem.Name = "quitToolStripMenuItem";
-			this.quitToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+			this.quitToolStripMenuItem.Size = new System.Drawing.Size(97, 22);
 			this.quitToolStripMenuItem.Text = "Quit";
 			this.quitToolStripMenuItem.Click += new System.EventHandler(this.QuitToolStripMenuItemClick);
 			// 
 			// editToolStripMenuItem
 			// 
+			this.editToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+			this.loadToonToolStripMenuItem});
 			this.editToolStripMenuItem.Name = "editToolStripMenuItem";
 			this.editToolStripMenuItem.Size = new System.Drawing.Size(39, 20);
 			this.editToolStripMenuItem.Text = "Edit";
+			// 
+			// loadToonToolStripMenuItem
+			// 
+			this.loadToonToolStripMenuItem.Name = "loadToonToolStripMenuItem";
+			this.loadToonToolStripMenuItem.Size = new System.Drawing.Size(131, 22);
+			this.loadToonToolStripMenuItem.Text = "Load Toon";
+			this.loadToonToolStripMenuItem.Click += new System.EventHandler(this.LoadToonToolStripMenuItemClick);
 			// 
 			// toolsToolStripMenuItem
 			// 
@@ -178,6 +190,14 @@ namespace MSBash
 			this.toolStripStatusLabel1.Name = "toolStripStatusLabel1";
 			this.toolStripStatusLabel1.Size = new System.Drawing.Size(118, 17);
 			this.toolStripStatusLabel1.Text = "toolStripStatusLabel1";
+			// 
+			// openFileDialog1
+			// 
+			this.openFileDialog1.DefaultExt = "txt";
+			this.openFileDialog1.FileName = "openFileDialog1";
+			this.openFileDialog1.Filter = "Toon Files|*.txt|All files|*.*";
+			this.openFileDialog1.InitialDirectory = "C:\\Users\\jonas\\Documents\\WOW Scripts\\MSBash";
+			this.openFileDialog1.FileOk += new System.ComponentModel.CancelEventHandler(this.OpenFileDialog1FileOk);
 			// 
 			// MainForm
 			// 
@@ -218,5 +238,7 @@ namespace MSBash
 		private System.Windows.Forms.ToolStripMenuItem captureToolStripMenuItem;
 		private System.Windows.Forms.StatusStrip statusStrip1;
 		private System.Windows.Forms.ToolStripStatusLabel toolStripStatusLabel1;
+		private System.Windows.Forms.ToolStripMenuItem loadToonToolStripMenuItem;
+		private System.Windows.Forms.OpenFileDialog openFileDialog1;
 	}
 }
